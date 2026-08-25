@@ -73,6 +73,50 @@ Supports various other ACR developed Arcade solutions
 
 Use something like pm2 or systemd to run as a daemon 
 
+## Remote Pricing Sync (optional)
+
+Manage play prices centrally in an external management system and have this server
+**pull** them over HTTPS (outbound only — nothing inbound is exposed). It's
+provider-agnostic: you point it at a configurable URL + bearer token that returns a
+per-location machine list; the server maps each entry by **reader MAC** and updates
+that machine's `cost` / `free_play` locally.
+
+**1. Pair a location** — get a one-time claim code from the management system, then:
+
+```
+npm run claim <baseUrl> <CLAIM-CODE> ["Label"]
+# e.g. npm run claim https://your-host.example.com A3GN-TAPG "Main floor"
+```
+
+This exchanges the code for a long-lived, **read-only** token and writes it into
+`config.json` under `remote_pricing.locations`. (To rotate it, RESET the site link
+in the management UI and re-run `npm run claim`.)
+
+**2. Config** (`config.json` — see `example-config.json`):
+
+```json
+"remote_pricing": {
+  "enabled": true,
+  "interval_sec": 60,
+  "locations": [
+    { "label": "Main floor", "url": "https://your-host.example.com/api/credit-sync/pricing", "token": "<site-token>" }
+  ]
+}
+```
+
+One card-server can serve several locations — add one `{ url, token }` per location.
+
+**3. Contract** — each `url` must return, for its `Authorization: Bearer <token>`:
+
+```json
+{ "machines": [ { "externalDeviceId": "AA:BB:CC:DD:EE:FF", "cost": 2, "freeplay": false } ] }
+```
+
+`externalDeviceId` = the reader's MAC (matched case-insensitively); `cost` = credits
+per play (`null` = leave the local price unchanged); `freeplay: true` sets free play
+and ignores `cost`. The server polls every `interval_sec` and fails quiet on errors
+(keeps the last-known prices). It never writes to any inbound port.
+
 ## Example Card Reader Designs
 Here are card readers that I have made and implemented as an example
 ### WACCA (Built into lower panel)

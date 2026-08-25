@@ -2145,4 +2145,9 @@ app.get('/set/arcade/japanese/:value', manageAuth, (req, res) => {
 
 app.listen(port, () => {
     console.log(`Card server is running on http://0.0.0.0:${port}`);
+    try {
+        require('./remote-pricing-sync').start({ config, db, saveDatabase });
+    } catch (e) {
+        console.error('[remote-pricing] failed to start:', e.message);
+    }
 });
