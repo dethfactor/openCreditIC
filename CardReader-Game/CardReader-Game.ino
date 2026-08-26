@@ -67,7 +67,7 @@ bool invertMessage = false;
 
 int lastCheckIn = 0;
 
-char* sys_name = "";
+char sys_name[33] = "";  // machine display name, synced from server config
 bool sys_jpn = false;
 bool sys_free_play = false;
 bool sys_currency_mode = false;
@@ -293,7 +293,7 @@ void getConfig(bool firstStart) {
     Serial.println(httpResponse);
     DynamicJsonDocument doc(1024);
     deserializeJson(doc, httpResponse);
-    //sys_name = doc["name"];
+    strlcpy(sys_name, doc["name"] | "", sizeof(sys_name));  // copy out of doc before it goes out of scope
     sys_cost = doc["cost"];
     sys_free_play = doc["free_play"];
     sys_currency_mode = doc["currency_mode"];
@@ -916,6 +916,13 @@ void displayStandbyScreen() {
         int centerGlY = (u8g2.getHeight() / 2 + u8g2.getAscent() / 2);
         u8g2.drawGlyph(centerGlX, centerGlY, 77);
     #else
+        if (sys_name[0] != '\0') {  // machine name as a title along the top
+          u8g2.setFont(u8g2_font_HelvetiPixel_tr);
+          int nameWidth = u8g2.getUTF8Width(sys_name);
+          int nameX = (u8g2.getWidth() - nameWidth) / 2;
+          if (nameX < 0) nameX = 0;
+          u8g2.drawUTF8(nameX, 10, sys_name);
+        }
         u8g2.setFont(u8g2_font_open_iconic_all_4x_t);
         int centerGlX = (u8g2.getWidth() - 32) / 2;
         int centerGlY = (u8g2.getHeight() / 2 + u8g2.getAscent() / 2) - 10;

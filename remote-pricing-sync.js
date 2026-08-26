@@ -15,9 +15,10 @@
 //   (A single top-level { "url", "token" } instead of "locations" is also accepted.)
 //
 // Expected response per location:
-//   { "machines": [ { "externalDeviceId": "AA:BB:CC:...", "cost": 2, "freeplay": false }, ... ] }
+//   { "machines": [ { "externalDeviceId": "AA:BB:CC:...", "name": "Cherry Master", "cost": 2, "freeplay": false }, ... ] }
 //   externalDeviceId = the reader MAC (uppercased before indexing db.machines);
-//   cost = credits per play; null = leave the local price as-is.
+//   cost = credits per play; null = leave the local price as-is;
+//   name = machine display name (surfaced in server logs, the UI, and to the reader).
 
 function normalizeLocations(rp) {
   if (!rp) return [];
@@ -57,6 +58,7 @@ async function syncLocation(loc, db, log) {
       m.cost = Number(row.cost);
       changes++;
     }
+    if (row.name != null && m.name !== String(row.name)) { m.name = String(row.name); changes++; }
   }
   if (changes) log(`[remote-pricing] ${where}: applied ${changes} change(s) across ${(data.machines || []).length} machine(s)`);
   return changes;
