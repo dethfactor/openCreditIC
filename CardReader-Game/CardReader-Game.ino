@@ -333,12 +333,14 @@ String getUID() {
     success = nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, uidValue, &uidLength);
     if (success) {
       for (uint8_t i = 0; i < uidLength; i++) {
+        if (uidValue[i] < 0x10) uid += "0";  // zero-pad so each byte is 2 hex chars (standard UID)
         uid += String(uidValue[i], HEX);
       }
       uid.toUpperCase();
     }
   #else
     for (byte i = 0; i < mfrc522.uid.size; i++) {
+      if (mfrc522.uid.uidByte[i] < 0x10) uid += "0";  // zero-pad so each byte is 2 hex chars (standard UID)
       uid += String(mfrc522.uid.uidByte[i], HEX);
     }
     uid.toUpperCase();

@@ -85,6 +85,7 @@ void loop() {
 String getUID() {
   String uid = "";
   for (byte i = 0; i < mfrc522.uid.size; i++) {
+    if (mfrc522.uid.uidByte[i] < 0x10) uid += "0";  // zero-pad so each byte is 2 hex chars (standard UID)
     uid += String(mfrc522.uid.uidByte[i], HEX);
   }
   uid.toUpperCase();
