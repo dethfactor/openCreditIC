@@ -92,7 +92,7 @@ This exchanges the code for a long-lived, **read-only** token and writes it into
 `config.json` under `remote_pricing.locations`. (To rotate it, RESET the site link
 in the management UI and re-run `npm run claim`.)
 
-**2. Config** (add to `config.json`):
+**2. Config** (`config.json` — see `example-config.json`):
 
 ```json
 "remote_pricing": {
