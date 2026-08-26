@@ -1995,6 +1995,54 @@ app.get('/get/free_play', manageAuth, (req, res) => {
         res.status(500).send('Server Error');
     }
 });
+// Read-only machine price roster (reflects the remote provider / remote pricing feed).
+app.get('/get/prices', manageAuth, (req, res) => {
+    if (db.cards && db.users) {
+        try {
+            res.status(200).render('prices', {
+                machines: Object.entries(db.machines).filter(e => !e[1].pos_mode).map(e => {
+                    const m = e[1];
+                    return {
+                        id: e[0],
+                        name: m.name || null,
+                        cost: (m.cost != null) ? m.cost : null,
+                        free_play: !!m.free_play,
+                        local_override: m.local_override === true,
+                        remote: m.remote === true,
+                        synced_pretty: m.remote_synced_at ? moment(new Date(m.remote_synced_at)).fromNow() : null
+                    };
+                })
+            });
+        } catch (e) {
+            console.error("Failed to read cards database", e)
+            res.status(500).send('Server Error');
+        }
+    } else {
+        res.status(500).send('Server Error');
+    }
+});
+// Pause/resume provider syncing for a single machine so an on-site edit survives.
+app.get('/set/machine/override/:machine_id/:value', manageAuth, (req, res) => {
+    if (db.cards && db.users) {
+        try {
+            const mac = (req.params.machine_id).toUpperCase();
+            if (db.machines[mac] === undefined) {
+                db.machines[mac] = {};
+            }
+            const on = (req.params.value === "enable");
+            db.machines[mac].local_override = on;
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(saveDatabase, 5000);
+            res.status(200).send((on ? "Local override ON (sync paused) for " : "Local override OFF (syncing from provider) for ") + mac);
+            console.log((on ? "Local override ON: " : "Local override OFF: ") + mac)
+        } catch (e) {
+            console.error("Failed to read cards database", e)
+            res.status(500).send('Server Error');
+        }
+    } else {
+        res.status(500).send('Server Error');
+    }
+});
 app.get('/set/arcade/cost/:cost', manageAuth, (req, res) => {
     if (db.cards && db.users) {
         try {

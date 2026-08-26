@@ -297,6 +297,67 @@ function getFreePlay() {
     });
     return false
 }
+function getPrices() {
+    let _url = new URL(`${document.location.origin}/get/prices`);
+    if (typeof SEQ_APP_URL !== 'undefined')
+        _url.pathname = SEQ_APP_URL + _url.pathname;
+    if (key)
+        _url.searchParams.set('key', key);
+    $.ajax({
+        type: "GET",
+        url: _url,
+        data: '',
+        processData: false,
+        contentType: false,
+        cache: false,
+        success: function (res, txt, xhr) {
+            if (xhr.status === 200) {
+                $('#pricesDataDiv').html(res);
+                $("#showPricesModal").modal("show");
+            } else {
+                alert(res)
+            }
+        },
+        error: function (xhr) {
+            alert(`Failure: ${xhr.responseText}`)
+        },
+    });
+    return false
+}
+// Keyed GET then re-render the price roster (keeps the modal open).
+function priceAction(url) {
+    let _url = new URL(`${document.location.origin}${url}`);
+    if (typeof SEQ_APP_URL !== 'undefined')
+        _url.pathname = SEQ_APP_URL + _url.pathname;
+    if (key)
+        _url.searchParams.set('key', key);
+    $.ajax({
+        type: "GET",
+        url: _url,
+        data: '',
+        processData: false,
+        contentType: false,
+        cache: false,
+        success: function () { getPrices(); },
+        error: function (xhr) { alert(`Failure: ${xhr.responseText}`) },
+    });
+    return false
+}
+function setOverride(machine_id, on) {
+    return priceAction(`/set/machine/override/${machine_id}/${on ? 'enable' : 'disable'}`);
+}
+function setMachineFreeplay(machine_id, on) {
+    return priceAction(`/set/machine/freeplay/${machine_id}/${on ? 'enable' : 'disable'}`);
+}
+function setMachineCost(machine_id) {
+    const el = document.getElementById('overrideCost' + machine_id);
+    const val = el ? el.value : '';
+    if (val === '' || isNaN(parseFloat(val)) || parseFloat(val) < 0) {
+        alert('Enter a valid credit amount (0 or more).');
+        return false;
+    }
+    return priceAction(`/set/machine/cost/${machine_id}/${parseFloat(val)}`);
+}
 function depositCredits() {
     const model = $('#depositModal')
     let userID = false

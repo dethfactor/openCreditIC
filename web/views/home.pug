@@ -82,6 +82,7 @@ body.bg-dark.text-white
                         a.dropdown-item.text-danger(href='#' onclick='cardAction("/delete/scan/user"); return false;') Delete User
                     .dropdown-header Arcade Management
                     .dropdown-divider
+                    a.dropdown-item(href='#' onclick='getPrices(); return false;') Prices
                     a.dropdown-item(href='#' onclick='getFreePlay(); return false;') Free Play
         div.w-100.mt-3.row.justify-content-center
             each machine in machine_dispense
@@ -214,6 +215,18 @@ body.bg-dark.text-white
                         i.fas.fa-plus.pr-2
                         span Card
                     button.btn.btn-secondary(type='button' onclick='clearUser(); return false;') Close
+    div.modal#showPricesModal(tabindex='-1' role='dialog')
+        div.modal-dialog.text-dark
+            div.modal-content
+                div.modal-header.text-white.py-2.bg-primary
+                    h5.modal-title Machine Prices
+                    button.close(type='button', data-dismiss='modal')
+                        span &times;
+                div#pricesDataDiv.modal-body
+
+                div.modal-footer
+                    button.btn.btn-outline-secondary.mr-auto(type='button' onclick='getPrices(); return false;') Refresh
+                    button.btn.btn-secondary(type='button' data-dismiss='modal') Close
     div.modal#showFreePlayModel(tabindex='-1' role='dialog')
         div.modal-dialog.text-dark
             div.modal-content

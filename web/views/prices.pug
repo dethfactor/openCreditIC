@@ -1,0 +1,41 @@
+if (!machines || machines.length === 0)
+    p.text-muted.mb-0 No machines yet. Prices appear here once a reader MAC is mapped and the provider syncs.
+else
+    .small.text-muted.mb-2 Prices are managed centrally and pulled automatically. Use #[strong Override] to pause syncing for a machine and set it locally on-site.
+    .list-group
+        for machine in machines
+            .list-group-item.px-2.py-2
+                .d-flex.justify-content-between.align-items-center
+                    div.mr-2.text-truncate
+                        .font-weight-bold.text-truncate #{machine.name ? machine.name : machine.id}
+                        .small.text-muted #{machine.id}
+                    div.text-right.flex-shrink-0
+                        if (machine.free_play)
+                            span.badge.badge-success.badge-pill FREE PLAY
+                        else if (machine.cost != null)
+                            span.badge.badge-primary.badge-pill #{machine.cost} credit#{(machine.cost == 1) ? '' : 's'}
+                        else
+                            span.badge.badge-secondary.badge-pill unset
+                .d-flex.justify-content-between.align-items-center.mt-2
+                    div.small
+                        if (machine.local_override)
+                            span.badge.badge-warning OVERRIDE
+                            span.text-muted  — sync paused
+                        else if (machine.remote)
+                            span.text-success ✓ synced
+                            if (machine.synced_pretty)
+                                span.text-muted  · #{machine.synced_pretty}
+                        else
+                            span.text-muted LOCAL — not from provider
+                    div.flex-shrink-0
+                        if (machine.local_override)
+                            button.btn.btn-sm.btn-outline-secondary(type='button' onclick=`setOverride("${machine.id}", false); return false;`) Release to provider
+                        else
+                            button.btn.btn-sm.btn-outline-warning(type='button' onclick=`setOverride("${machine.id}", true); return false;`) Override
+                if (machine.local_override)
+                    .d-flex.align-items-center.mt-2.flex-wrap
+                        .input-group.input-group-sm.mr-2.mb-1(style='max-width: 200px;')
+                            input.form-control(id=`overrideCost${machine.id}` type='number' min='0' step='1' value=`${(machine.cost != null) ? machine.cost : ''}` placeholder='credits')
+                            .input-group-append
+                                button.btn.btn-outline-primary(type='button' onclick=`setMachineCost("${machine.id}"); return false;`) Set price
+                        button.btn.btn-sm.mb-1(class=`${machine.free_play ? 'btn-success' : 'btn-outline-secondary'}` type='button' onclick=`setMachineFreeplay("${machine.id}", ${machine.free_play ? 'false' : 'true'}); return false;`) #{machine.free_play ? 'Free play: ON' : 'Set free play'}

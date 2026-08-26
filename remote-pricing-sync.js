@@ -52,13 +52,21 @@ async function syncLocation(loc, db, log) {
     const mac = String(row.externalDeviceId || '').toUpperCase();
     if (!mac) continue; // machine not mapped to a reader yet
     const m = (db.machines[mac] = db.machines[mac] || {});
+    // Mark as provider-managed + stamp freshness for the UI. In-memory only:
+    // not counted as a change, so it doesn't force a cards.json write every poll.
+    m.remote = true;
+    m.remote_synced_at = Date.now();
+    // Name always follows the provider (harmless label refresh, even under override).
+    if (row.name != null && m.name !== String(row.name)) { m.name = String(row.name); changes++; }
+    // Local override pauses price/free-play syncing for this one machine so an
+    // on-site edit survives (feed outage, event comp). Release it to resume syncing.
+    if (m.local_override === true) continue;
     const freeplay = !!row.freeplay;
     if (m.free_play !== freeplay) { m.free_play = freeplay; changes++; }
     if (!freeplay && row.cost != null && Number(row.cost) >= 0 && m.cost !== Number(row.cost)) {
       m.cost = Number(row.cost);
       changes++;
     }
-    if (row.name != null && m.name !== String(row.name)) { m.name = String(row.name); changes++; }
   }
   if (changes) log(`[remote-pricing] ${where}: applied ${changes} change(s) across ${(data.machines || []).length} machine(s)`);
   return changes;
