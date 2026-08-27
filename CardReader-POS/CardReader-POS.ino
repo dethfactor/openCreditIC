@@ -1,3 +1,5 @@
+#include <Wire.h>
+#include <Adafruit_PN532.h>
 #include <SPI.h>
 #include <MFRC522.h>
 #include <WebServer.h>
@@ -17,7 +19,10 @@
 #define NUM_LEDS  1  // Define the number of LEDs in the strip.
 
 CRGB leds[NUM_LEDS]; // Create an array of CRGB colors for the LEDs.
-MFRC522 mfrc522(SS_PIN, RST_PIN); // Create an MFRC522 instance.
+#ifdef RFID_I2C
+Adafruit_PN532 nfc(21, 22); // PN532 over I2C (SDA=21, SCL=22)
+#endif
+MFRC522 mfrc522(SS_PIN, RST_PIN); // Create an MFRC522 instance (SPI).
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0);
 WebServer server(80);
 bool sys_jpn = false;
@@ -28,9 +33,27 @@ void setup() {
   Serial.begin(115200);
   pinMode(21, OUTPUT);
   pinMode(22, OUTPUT);
+#ifdef RFID_I2C
+  Wire.begin(21, 22);
+  nfc.begin();
+  {
+    uint32_t versiondata = nfc.getFirmwareVersion();
+    if (!versiondata) {
+      Serial.println("Didn't find PN53x board");
+      bootScreen("NFC FAILURE");
+      while (1)
+        ;
+    }
+    Serial.print("Found chip PN5");
+    Serial.println((versiondata >> 24) & 0xFF, HEX);
+    nfc.setPassiveActivationRetries(0x0A);
+    nfc.SAMConfig();
+  }
+#else
   SPI.begin(); // Initialize SPI communication.
   mfrc522.PCD_Init(); // Initialize the RFID module.
   mfrc522.PCD_SetAntennaGain(mfrc522.RxGain_48dB);
+#endif
   FastLED.addLeds<WS2812, LED_PIN, GRB>(leds, NUM_LEDS); // Initialize the LED strip.
   u8g2.begin();
   u8g2.enableUTF8Print();
@@ -47,8 +70,8 @@ void setup() {
   standbyScreen();
 }
 void loop() {
-  if (mfrc522.PICC_IsNewCardPresent() && mfrc522.PICC_ReadCardSerial()) {
-    String uid = getUID();
+  String uid;
+  if (readCardUID(uid)) {
     Serial.print("Card Detected: ");
     Serial.println(uid);
     handleStartComm(uid);
@@ -90,6 +113,26 @@ String getUID() {
   }
   uid.toUpperCase();
   return uid;
+}
+// Non-blocking card poll. Fills `uid` and returns true when a card is present.
+// PN532 (I2C) uses a short timeout so the web server + WiFi keep serviced.
+bool readCardUID(String &uid) {
+#ifdef RFID_I2C
+  uint8_t uidValue[7] = { 0, 0, 0, 0, 0, 0, 0 };
+  uint8_t uidLength = 0;
+  if (!nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, uidValue, &uidLength, 100)) return false;
+  uid = "";
+  for (uint8_t i = 0; i < uidLength; i++) {
+    if (uidValue[i] < 0x10) uid += "0";  // zero-pad to 2 hex chars (standard UID)
+    uid += String(uidValue[i], HEX);
+  }
+  uid.toUpperCase();
+  return uid.length() > 0;
+#else
+  if (!(mfrc522.PICC_IsNewCardPresent() && mfrc522.PICC_ReadCardSerial())) return false;
+  uid = getUID();
+  return uid.length() > 0;
+#endif
 }
 void checkWiFiConnection() {
   if (WiFi.status() != WL_CONNECTED) {
