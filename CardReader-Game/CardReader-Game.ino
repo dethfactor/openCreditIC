@@ -95,8 +95,6 @@ bool sys_callbackOnBlockedTap = false;
 void setup() {
   Serial.begin(115200);
   pinMode(RELAY_PIN, OUTPUT);
-  pinMode(21, OUTPUT);
-  pinMode(22, OUTPUT);
   pinMode(BLOCK_PIN, INPUT);
   pinMode(BUTTON_PIN, INPUT_PULLUP);
   digitalWrite(RELAY_PIN, LOW);                           // Initially, set the relay to OFF.
@@ -109,14 +107,16 @@ void setup() {
   FastLED.show();
   bootScreen("HARDWARE");
   #ifdef RFID_I2C
+    delay(300);            // let the PN532 finish powering up before I2C init
     Wire.begin(21, 22);
     nfc.begin();
     uint32_t versiondata = nfc.getFirmwareVersion();
-    if (!versiondata) {
-      Serial.println("Didn't find PN53x board");
+    while (!versiondata) {  // retry (delay feeds the watchdog) instead of a while(1) hang
+      Serial.println("Didn't find PN53x board - retrying...");
       bootScreen("NFC FAILURE");
-      while (1)
-        ;
+      delay(500);
+      nfc.begin();
+      versiondata = nfc.getFirmwareVersion();
     }
     Serial.print("Found chip PN5");
     Serial.println((versiondata >> 24) & 0xFF, HEX);
