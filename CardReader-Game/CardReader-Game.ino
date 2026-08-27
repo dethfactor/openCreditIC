@@ -31,10 +31,20 @@ Adafruit_PN532 nfc(21, 22);
 MFRC522 mfrc522(SS_PIN, RST_PIN);  // Create an MFRC522 instance.
 #endif
 
+// With RFID_I2C the PN532 owns the hardware I2C bus (D21/D22), so the OLED runs on
+// its own software-I2C pins (SCL=D33, SDA=D32). Without RFID_I2C it shares HW I2C.
 #ifdef DISPLAY_I2C_128x32
+  #ifdef RFID_I2C
+U8G2_SSD1306_128X32_UNIVISION_F_SW_I2C u8g2(U8G2_R0, /*SCL=*/ 33, /*SDA=*/ 32, U8X8_PIN_NONE);
+  #else
 U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R0);
+  #endif
 #else
+  #ifdef RFID_I2C
+U8G2_SSD1306_128X64_NONAME_F_SW_I2C u8g2(U8G2_R0, /*SCL=*/ 33, /*SDA=*/ 32, U8X8_PIN_NONE);
+  #else
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0);
+  #endif
 #endif
 #ifdef REMOTE_ACCESS
 WebServer server(80);
