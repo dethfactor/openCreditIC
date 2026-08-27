@@ -29,21 +29,44 @@ String lastUID = "";
 unsigned long lastTapMs = 0;
 
 // ---- display helpers ----
+int centerX(const char *s) {
+  int x = (128 - u8g2.getStrWidth(s)) / 2;
+  return x < 0 ? 0 : x;
+}
+
 void showTwoLines(const char *l1, const char *l2) {
   u8g2.clearBuffer();
   u8g2.setFont(u8g2_font_6x12_tr);
-  int w1 = u8g2.getStrWidth(l1);
-  u8g2.drawStr((128 - w1) / 2 < 0 ? 0 : (128 - w1) / 2, 26, l1);
-  int w2 = u8g2.getStrWidth(l2);
-  u8g2.drawStr((128 - w2) / 2 < 0 ? 0 : (128 - w2) / 2, 46, l2);
+  u8g2.drawStr(centerX(l1), 26, l1);
+  u8g2.drawStr(centerX(l2), 46, l2);
   u8g2.sendBuffer();
 }
 
 void showStandby() {
-  char line2[24];
-  if (playCost >= 0) snprintf(line2, sizeof(line2), "Tap card - %ld cr", playCost);
-  else               snprintf(line2, sizeof(line2), "Tap your card");
-  showTwoLines(machineName.c_str(), line2);
+  u8g2.clearBuffer();
+  u8g2.setFont(u8g2_font_6x12_tr);
+
+  // Wrap the machine name onto up to two centered lines so it never clips.
+  String a = machineName, b = "";
+  if (u8g2.getStrWidth(machineName.c_str()) > 126) {
+    int splitIdx = -1;
+    for (int p = 0; p < (int)machineName.length(); p++)
+      if (machineName[p] == ' ' && u8g2.getStrWidth(machineName.substring(0, p).c_str()) <= 126)
+        splitIdx = p;  // last space that still fits on line 1
+    if (splitIdx > 0) { a = machineName.substring(0, splitIdx); b = machineName.substring(splitIdx + 1); }
+  }
+  if (b == "") {
+    u8g2.drawStr(centerX(a.c_str()), 24, a.c_str());
+  } else {
+    u8g2.drawStr(centerX(a.c_str()), 16, a.c_str());
+    u8g2.drawStr(centerX(b.c_str()), 32, b.c_str());
+  }
+
+  char l2[24];
+  if (playCost >= 0) snprintf(l2, sizeof(l2), "Tap card - %ld cr", playCost);
+  else               snprintf(l2, sizeof(l2), "Tap your card");
+  u8g2.drawStr(centerX(l2), 56, l2);
+  u8g2.sendBuffer();
 }
 
 // ---- wifi ----
@@ -130,7 +153,7 @@ void loop() {
   lastTapMs = millis();
 
   Serial.print("Card: "); Serial.println(card);
-  showTwoLines(machineName.c_str(), "Reading...");
+  showTwoLines("Reading...", "");
 
   HTTPClient http;
   String url = String(apiUrl) + "withdraw/" + WiFi.macAddress() + "/" + card + "?key=" + deviceKey;
@@ -150,14 +173,14 @@ void loop() {
     delay(RELAY_MS);
     digitalWrite(RELAY_PIN, LOW);
     char l2[24];
-    if (balance >= 0) snprintf(l2, sizeof(l2), "Credit! Bal %ld", balance);
-    else              snprintf(l2, sizeof(l2), "Credit added!");
-    showTwoLines(machineName.c_str(), l2);
+    if (balance >= 0) snprintf(l2, sizeof(l2), "Balance: %ld", balance);
+    else              snprintf(l2, sizeof(l2), "");
+    showTwoLines("CREDIT ADDED", l2);
     Serial.println("Credit dispensed");
   } else if (code == 402 || code == 403) {
-    showTwoLines(machineName.c_str(), "Low balance");
+    showTwoLines("LOW BALANCE", "");
   } else {
-    showTwoLines(machineName.c_str(), "Card denied");
+    showTwoLines("CARD DENIED", "");
   }
   delay(1500);   // let the message show before returning to standby
 }
