@@ -35,13 +35,13 @@ MFRC522 mfrc522(SS_PIN, RST_PIN);  // Create an MFRC522 instance.
 // its own software-I2C pins (SCL=D33, SDA=D32). Without RFID_I2C it shares HW I2C.
 #ifdef DISPLAY_I2C_128x32
   #ifdef RFID_I2C
-U8G2_SSD1306_128X32_UNIVISION_F_2ND_HW_I2C u8g2(U8G2_R0);  // Wire1 pins set in setup()
+U8G2_SSD1306_128X32_UNIVISION_F_SW_I2C u8g2(U8G2_R0, /*SCL=*/ 33, /*SDA=*/ 32, U8X8_PIN_NONE);
   #else
 U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R0);
   #endif
 #else
   #ifdef RFID_I2C
-U8G2_SSD1306_128X64_NONAME_F_2ND_HW_I2C u8g2(U8G2_R0);  // Wire1 pins set in setup()
+U8G2_SSD1306_128X64_NONAME_F_SW_I2C u8g2(U8G2_R0, /*SCL=*/ 33, /*SDA=*/ 32, U8X8_PIN_NONE);
   #else
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0);
   #endif
@@ -101,9 +101,6 @@ void setup() {
   pinMode(BUTTON_PIN, INPUT_PULLUP);
   digitalWrite(RELAY_PIN, LOW);                           // Initially, set the relay to OFF.
   FastLED.addLeds<WS2812, LED_PIN, GRB>(leds, NUM_LEDS);  // Initialize the LED strip.
-#ifdef RFID_I2C
-  Wire1.begin(32, 33);  // OLED on the 2nd HW I2C bus (SDA=32, SCL=33); PN532 owns the primary bus
-#endif
   u8g2.begin();
   u8g2.enableUTF8Print();
   setLEDs(CRGB::Black);
