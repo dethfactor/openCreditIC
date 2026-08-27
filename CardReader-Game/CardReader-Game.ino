@@ -95,7 +95,9 @@ bool sys_callbackOnBlockedTap = false;
 void setup() {
   Serial.begin(115200);
   pinMode(RELAY_PIN, OUTPUT);
-  pinMode(BLOCK_PIN, INPUT);
+  // Pull-down so an unconnected coin-blocker line reads LOW = "game enabled" (reads
+  // cards). A real cabinet's blocker signal still drives this pin normally.
+  pinMode(BLOCK_PIN, INPUT_PULLDOWN);
   pinMode(BUTTON_PIN, INPUT_PULLUP);
   digitalWrite(RELAY_PIN, LOW);                           // Initially, set the relay to OFF.
   FastLED.addLeds<WS2812, LED_PIN, GRB>(leds, NUM_LEDS);  // Initialize the LED strip.
