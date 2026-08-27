@@ -46,7 +46,9 @@ void setup() {
     }
     Serial.print("Found chip PN5");
     Serial.println((versiondata >> 24) & 0xFF, HEX);
-    nfc.setPassiveActivationRetries(0x0A);
+    nfc.setPassiveActivationRetries(0x00);  // 0 retries = responds immediately, so the
+                                            // non-blocking readPassiveTargetID() timeout in
+                                            // the loop works cleanly (no desync on empty polls)
     nfc.SAMConfig();
   }
 #else
