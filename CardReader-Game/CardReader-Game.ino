@@ -56,7 +56,7 @@ TaskHandle_t Task1;
 TaskHandle_t Task2;
 TaskHandle_t Task3;
 TaskHandle_t Task4;
-#ifdef MULTICORE_ENABLE
+#ifdef HAPPYCAB_ENABLE
 // Forward declarations (defined below) — newer ESP32 cores don't auto-prototype
 // these void(void*) task functions, so setup() can't see them otherwise.
 void cardReaderTXLoop(void *pvParameters);
@@ -191,6 +191,7 @@ void setup() {
   #endif
   Serial.println("Reader is ready to init");
   #ifdef MULTICORE_ENABLE
+    #ifdef HAPPYCAB_ENABLE
     bootScreen("BOOT_HCCL");
     //create a task that will be executed in the Task2code() function, with priority 1 and executed on core 1
     xTaskCreatePinnedToCore(
@@ -212,6 +213,7 @@ void setup() {
                       &Task4,      /* Task handle to keep track of created task */
                       1);          /* pin task to core 1 */
     delay(500);
+    #endif
     bootScreen("BOOT_CPU1");
     xTaskCreatePinnedToCore(
                       cpu2Loop,   /* Task function. */
