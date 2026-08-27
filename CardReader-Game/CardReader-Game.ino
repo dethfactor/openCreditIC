@@ -56,6 +56,12 @@ TaskHandle_t Task1;
 TaskHandle_t Task2;
 TaskHandle_t Task3;
 TaskHandle_t Task4;
+#ifdef MULTICORE_ENABLE
+// Forward declarations (defined below) — newer ESP32 cores don't auto-prototype
+// these void(void*) task functions, so setup() can't see them otherwise.
+void cardReaderTXLoop(void *pvParameters);
+void cardReaderRXLoop(void *pvParameters);
+#endif
 
 int enableState = 0;
 int blockState = 0;
