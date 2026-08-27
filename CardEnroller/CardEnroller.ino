@@ -50,7 +50,6 @@ void setup() {
   }
   Serial.print("Found PN532, firmware 0x");
   Serial.println(ver, HEX);
-  nfc.setPassiveActivationRetries(0x00);  // non-blocking: respond immediately
   nfc.SAMConfig();
 
   connectWiFi();
@@ -62,7 +61,9 @@ void loop() {
 
   uint8_t uid[7] = { 0 };
   uint8_t uidLen = 0;
-  if (!nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLen, 100)) return;
+  // Blocking read (matches the proven standalone test): waits here until a card
+  // is present. The WiFi link is maintained by the background core meanwhile.
+  if (!nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLen)) return;
 
   String card = "";
   for (uint8_t i = 0; i < uidLen; i++) {
