@@ -63,7 +63,7 @@ void showStandby() {
   }
 
   char l2[24];
-  if (playCost >= 0) snprintf(l2, sizeof(l2), "Tap card - %ld cr", playCost);
+  if (playCost >= 0) snprintf(l2, sizeof(l2), "Tap card - %ld CR", playCost);
   else               snprintf(l2, sizeof(l2), "Tap your card");
   u8g2.drawStr(centerX(l2), 56, l2);
   u8g2.sendBuffer();
