@@ -371,6 +371,17 @@ String getUID() {
 // Action Handelers //
 //////////////////////
 
+// Card-read state — shared by runtime()/handleCardRead() and the HappyCAB tasks,
+// so it must live at global scope (not inside the MULTICORE_ENABLE block).
+int last_card_response = -1;
+String last_card_data = "";
+bool send_boot = false;
+bool send_button_0 = false;
+bool send_button_1 = false;
+bool send_button_2 = false;
+bool send_button_3 = false;
+bool send_button_4 = false;
+bool send_button_5 = false;
 // Primary Loop function
 #ifdef MULTICORE_ENABLE
 void cpu1Loop( void * pvParameters ) {
@@ -414,15 +425,6 @@ void cpu2Loop( void * pvParameters ) {
     #endif
   }
 }
-int last_card_response = -1;
-String last_card_data = "";
-bool send_boot = false;
-bool send_button_0 = false;
-bool send_button_1 = false;
-bool send_button_2 = false;
-bool send_button_3 = false;
-bool send_button_4 = false;
-bool send_button_5 = false;
 #ifdef HAPPYCAB_ENABLE
 // MCU Talk Loop Function
 void cardReaderTXLoop( void * pvParameters ) {
