@@ -31,27 +31,28 @@ float sys_currency_rate = 1;
 
 void setup() {
   Serial.begin(115200);
-  pinMode(21, OUTPUT);
-  pinMode(22, OUTPUT);
 #ifdef RFID_I2C
+  delay(300);            // let the PN532 finish powering up before we init the I2C bus
   Wire.begin(21, 22);
   nfc.begin();
-  {
-    uint32_t versiondata = nfc.getFirmwareVersion();
-    if (!versiondata) {
-      Serial.println("Didn't find PN53x board");
-      bootScreen("NFC FAILURE");
-      while (1)
-        ;
-    }
-    Serial.print("Found chip PN5");
-    Serial.println((versiondata >> 24) & 0xFF, HEX);
-    nfc.setPassiveActivationRetries(0x00);  // 0 retries = responds immediately, so the
-                                            // non-blocking readPassiveTargetID() timeout in
-                                            // the loop works cleanly (no desync on empty polls)
-    nfc.SAMConfig();
+  uint32_t versiondata = nfc.getFirmwareVersion();
+  while (!versiondata) {  // retry with a delay (which feeds the watchdog) instead of a
+                          // bare while(1) hang — that starves the WDT and reboot-loops
+    Serial.println("Didn't find PN53x board - retrying...");
+    bootScreen("NFC FAILURE");
+    delay(500);
+    nfc.begin();
+    versiondata = nfc.getFirmwareVersion();
   }
+  Serial.print("Found chip PN5");
+  Serial.println((versiondata >> 24) & 0xFF, HEX);
+  nfc.setPassiveActivationRetries(0x00);  // 0 retries = responds immediately, so the
+                                          // non-blocking readPassiveTargetID() timeout in
+                                          // the loop works cleanly (no desync on empty polls)
+  nfc.SAMConfig();
 #else
+  pinMode(21, OUTPUT);
+  pinMode(22, OUTPUT);
   SPI.begin(); // Initialize SPI communication.
   mfrc522.PCD_Init(); // Initialize the RFID module.
   mfrc522.PCD_SetAntennaGain(mfrc522.RxGain_48dB);
