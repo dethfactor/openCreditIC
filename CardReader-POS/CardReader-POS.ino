@@ -46,9 +46,6 @@ void setup() {
   }
   Serial.print("Found chip PN5");
   Serial.println((versiondata >> 24) & 0xFF, HEX);
-  nfc.setPassiveActivationRetries(0x00);  // 0 retries = responds immediately, so the
-                                          // non-blocking readPassiveTargetID() timeout in
-                                          // the loop works cleanly (no desync on empty polls)
   nfc.SAMConfig();
 #else
   pinMode(21, OUTPUT);
@@ -123,7 +120,8 @@ bool readCardUID(String &uid) {
 #ifdef RFID_I2C
   uint8_t uidValue[7] = { 0, 0, 0, 0, 0, 0, 0 };
   uint8_t uidLength = 0;
-  if (!nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, uidValue, &uidLength, 100)) return false;
+  // Blocking read (proven on hardware); matches the Game firmware + CardEnroller.
+  if (!nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, uidValue, &uidLength)) return false;
   uid = "";
   for (uint8_t i = 0; i < uidLength; i++) {
     if (uidValue[i] < 0x10) uid += "0";  // zero-pad to 2 hex chars (standard UID)
