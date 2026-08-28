@@ -20,6 +20,11 @@
 #define RELAY_PIN 13
 #define RELAY_MS  200   // how long to hold the credit pulse
 
+// How often to re-poll the server for name/price -- this doubles as the
+// heartbeat that keeps the reader showing "Online" on the home dashboard.
+#define CONFIG_INTERVAL_MS 30000
+#define READ_TIMEOUT_MS    1000   // card-read window before looping (so we heartbeat)
+
 // Credit-output polarity. The PC817 opto and active-HIGH relay boards fire on
 // HIGH (default). Many cheap blue relay modules are ACTIVE-LOW (IN pulled low
 // energizes the coil) -- set this to 1 for those, or the relay sits closed at
@@ -35,6 +40,7 @@ String machineName = "Machine";
 long   playCost = -1;      // credits per play, from server config
 String lastUID = "";
 unsigned long lastTapMs = 0;
+unsigned long lastConfigMs = 0;   // when we last polled the server
 
 // ---- display helpers ----
 int centerX(const char *s) {
@@ -136,18 +142,27 @@ void setup() {
 
   connectWiFi();
   fetchConfig();
+  lastConfigMs = millis();
   showStandby();
   Serial.println("Ready - tap a card to play.");
 }
 
 void loop() {
   connectWiFi();
+
+  // Periodic server poll: refreshes name/price live and acts as the heartbeat
+  // that keeps this reader flagged "Online" on the dashboard.
+  if (millis() - lastConfigMs >= CONFIG_INTERVAL_MS) {
+    fetchConfig();
+    lastConfigMs = millis();
+  }
   showStandby();
 
-  // Blocking read until a card is present (same proven pattern as CardEnroller).
+  // Read with a timeout (not forever) so the loop keeps cycling to heartbeat.
+  // Still the proven blocking read -- a card tapped during the window registers.
   uint8_t uid[7] = { 0 };
   uint8_t uidLen = 0;
-  if (!nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLen)) return;
+  if (!nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLen, READ_TIMEOUT_MS)) return;
 
   String card = "";
   for (uint8_t i = 0; i < uidLen; i++) {

@@ -198,9 +198,12 @@ app.get('/', manageAuth, (req, res) => {
             today.filter(e => !e.free_play).map(e => {
                 today_made = today_made + e.cost
             })
+            const checkin = history.machines_checkin[e[0].toUpperCase()]
+            const last_seen = checkin ? Math.max(checkin.init || 0, checkin.checkin || 0) : 0
             return {
                 id: e[0],
                 info: db.machines[e[0]],
+                last_seen,
                 today: {
                     users: [...new Set(today.map(e => e.user))],
                     profit: today_made,

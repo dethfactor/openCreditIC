@@ -88,11 +88,19 @@ body.bg-dark.text-white
             each machine in machine_dispense
                 .col-xl-4.col-md-6.mb-3
                     .card.text-white.bg-dark
-                        .row.card-header.align-items-center.p-2.m-0.d-flex(class=`${(machine.last.time >= (Date.now().valueOf() - 60 * 60000)) ? 'bg-success' : 'bg-transparent text-dark'}`)
+                        .row.card-header.align-items-center.p-2.m-0.d-flex(class=`${(machine.last_seen >= (Date.now().valueOf() - 120000)) ? 'bg-success' : 'bg-secondary text-white'}`)
                             .col.small.text-white.d-flex.p-0.align-items-center
                                 i.fas.fa-gamepad(style="padding-right: 0.5em")
                                 span #{(machine.info && machine.info.name) ? machine.info.name : machine.id}
                             .col-auto.d-flex.p-0.align-items-center
+                                if (machine.last_seen >= (Date.now().valueOf() - 120000))
+                                    span.badge.badge-light.d-inline-flex.align-items-center
+                                        i.fas.fa-circle.text-success.pr-1(style="font-size: 0.6em")
+                                        | Online
+                                else
+                                    span.badge.badge-dark.d-inline-flex.align-items-center
+                                        i.fas.fa-circle.pr-1(style="font-size: 0.6em; color: #adb5bd;")
+                                        | Offline
                         .card-body.position-relative.w-100.h-100.d-flex.flex-column(style=`padding: 0.7em;`)
                             .d-flex.align-items-center.justify-content-between.mb-2
                                 span.d-inline-flex.align-items-center.text-white-50.small.text-nowrap
