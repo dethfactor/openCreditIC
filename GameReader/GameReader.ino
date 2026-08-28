@@ -1,6 +1,6 @@
 // GameReader — a minimal, reliable openCreditIC game/cabinet reader.
 //
-// WiFi + PN532 (I2C 21/22) + SSD1306 OLED (software I2C 32/33) + relay (GPIO13).
+// WiFi + PN532 (I2C 21/22) + SSD1306 OLED (software I2C 25/26) + relay (GPIO13).
 // On each card tap it charges the machine's price via the server's /withdraw
 // endpoint and pulses the relay to drop a credit into the cabinet. No coin-block
 // state machine, no HappyCAB, no multicore — the same single-core pattern that
@@ -20,8 +20,16 @@
 #define RELAY_PIN 13
 #define RELAY_MS  200   // how long to hold the credit pulse
 
+// Credit-output polarity. The PC817 opto and active-HIGH relay boards fire on
+// HIGH (default). Many cheap blue relay modules are ACTIVE-LOW (IN pulled low
+// energizes the coil) -- set this to 1 for those, or the relay sits closed at
+// rest and "pulses" by opening.
+#define RELAY_ACTIVE_LOW 0
+#define RELAY_ON  (RELAY_ACTIVE_LOW ? LOW  : HIGH)
+#define RELAY_OFF (RELAY_ACTIVE_LOW ? HIGH : LOW)
+
 Adafruit_PN532 nfc(21, 22);                                                  // PN532 on primary I2C
-U8G2_SSD1306_128X64_NONAME_F_SW_I2C u8g2(U8G2_R0, /*SCL=*/ 33, /*SDA=*/ 32, U8X8_PIN_NONE);
+U8G2_SSD1306_128X64_NONAME_F_SW_I2C u8g2(U8G2_R0, /*SCL=*/ 26, /*SDA=*/ 25, U8X8_PIN_NONE);
 
 String machineName = "Machine";
 long   playCost = -1;      // credits per play, from server config
@@ -106,7 +114,7 @@ void fetchConfig() {
 void setup() {
   Serial.begin(115200);
   pinMode(RELAY_PIN, OUTPUT);
-  digitalWrite(RELAY_PIN, LOW);
+  digitalWrite(RELAY_PIN, RELAY_OFF);   // idle = coin line open
   delay(300);                       // PN532 power-up
   Serial.println("\n=== openCreditIC GameReader ===");
 
@@ -169,9 +177,9 @@ void loop() {
 
   if (code >= 200 && code < 300) {
     // Approved — pulse the relay to add a credit to the cabinet.
-    digitalWrite(RELAY_PIN, HIGH);
+    digitalWrite(RELAY_PIN, RELAY_ON);
     delay(RELAY_MS);
-    digitalWrite(RELAY_PIN, LOW);
+    digitalWrite(RELAY_PIN, RELAY_OFF);
     char l2[24];
     if (balance >= 0) snprintf(l2, sizeof(l2), "Balance: %ld", balance);
     else              snprintf(l2, sizeof(l2), "");
