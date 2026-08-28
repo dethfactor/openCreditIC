@@ -93,40 +93,51 @@ body.bg-dark.text-white
                                 i.fas.fa-gamepad(style="padding-right: 0.5em")
                                 span #{(machine.info && machine.info.name) ? machine.info.name : machine.id}
                             .col-auto.d-flex.p-0.align-items-center
-                        .card-body.position-relative.w-100.h-100.align-items-start.d-flex.flex-column(style=`padding: 0.7em;`)
-                            div
-                                i.fas.fa-user.pr-2
-                                span #{(machine.last.user_info && machine.last.user_info.name) ? machine.last.user_info.name : machine.last.user}
+                        .card-body.position-relative.w-100.h-100.d-flex.flex-column(style=`padding: 0.7em;`)
+                            .d-flex.align-items-center.justify-content-between.mb-2
+                                span.d-inline-flex.align-items-center.text-white-50.small.text-nowrap
+                                    i.fas.fa-user.pr-2
+                                    | Last User
+                                span.text-white.text-right.pl-3 #{(machine.last.user_info && machine.last.user_info.name) ? machine.last.user_info.name : machine.last.user}
                             if (machine.last.user_b2b > 1)
-                                div
-                                    i.fas.fa-chart-pie.pr-2
-                                    span.pr-1 #{machine.last.user_b2b}x (#{machine.last.user_total_time}) =
-                                    if (db.credit_to_currency_rate)
-                                        i.fas.fa-yen-sign.pr-1
-                                    span #{(db.credit_to_currency_rate) ? machine.last.user_total_profit * db.credit_to_currency_rate : (machine.last.user_total_profit + 'Credit(s)')}
-                            div.d-inline-flex.align-items-center
-                                i.fas.fa-money-bill.pr-2
+                                .d-flex.align-items-center.justify-content-between.mb-2
+                                    span.d-inline-flex.align-items-center.text-white-50.small.text-nowrap
+                                        i.fas.fa-chart-pie.pr-2
+                                        | Session
+                                    span.text-white.text-right.pl-3
+                                        span.pr-1 #{machine.last.user_b2b}x (#{machine.last.user_total_time}) =
+                                        if (db.credit_to_currency_rate)
+                                            i.fas.fa-yen-sign.pr-1
+                                        span #{(db.credit_to_currency_rate) ? machine.last.user_total_profit * db.credit_to_currency_rate : (machine.last.user_total_profit + ' Credit(s)')}
+                            .d-flex.align-items-center.justify-content-between.mb-2
+                                span.d-inline-flex.align-items-center.text-white-50.small.text-nowrap
+                                    i.fas.fa-money-bill.pr-2
+                                    | Play Price
                                 if (machine.last.free_play)
-                                    div.badge.badge-success.text-gray-900
-                                        span.font-weight-bold Free Play
+                                    span.badge.badge-success.text-gray-900.font-weight-bold Free Play
                                 else
-                                    if (db.credit_to_currency_rate)
-                                        i.fas.fa-yen-sign.pr-1
-                                    span #{(db.credit_to_currency_rate) ? machine.last.cost * db.credit_to_currency_rate : (machine.last.cost.toString() + 'Credit(s)')}
-                            div
-                                i.fas.fa-clock-four.pr-2
-                                span #{machine.last.time_pretty}
+                                    span.text-white.text-right.pl-3
+                                        if (db.credit_to_currency_rate)
+                                            i.fas.fa-yen-sign.pr-1
+                                        span #{(db.credit_to_currency_rate) ? machine.last.cost * db.credit_to_currency_rate : (machine.last.cost.toString() + ' Credit(s)')}
+                            .d-flex.align-items-center.justify-content-between
+                                span.d-inline-flex.align-items-center.text-white-50.small.text-nowrap
+                                    i.fas.fa-clock-four.pr-2
+                                    | Last Play
+                                span.text-white.text-right.pl-3 #{machine.last.time_pretty}
 
-                        .card-footer.position-relative.w-100.h-100.bg-translucent.d-flex.justify-content-between.border-top-0(style=`padding: 0.7em;`)
-                            div
+                        .card-footer.position-relative.w-100.bg-translucent.d-flex.justify-content-between.align-items-center.border-top-0(style=`padding: 0.7em;`)
+                            span.d-inline-flex.align-items-center
                                 i.fas.fa-users.pr-2
-                                span #{machine.today.users.length}
-                            div
+                                span.text-white-50.small.pr-2 Players Today
+                                span.font-weight-bold #{machine.today.users.length}
+                            span.d-inline-flex.align-items-center
+                                span.text-white-50.small.pr-2 Revenue
                                 if (db.credit_to_currency_rate)
                                     i.fas.fa-yen-sign.pr-1
                                 else
-                                    i.fas.fa-coins
-                                span #{(db.credit_to_currency_rate) ? machine.today.profit * db.credit_to_currency_rate : (machine.today.profit + 'Credit(s)')}
+                                    i.fas.fa-coins.pr-2
+                                span.font-weight-bold #{(db.credit_to_currency_rate) ? machine.today.profit * db.credit_to_currency_rate : (machine.today.profit + ' Credit(s)')}
 
     div.modal#newCardModal(tabindex='-1' role='dialog')
         div.modal-dialog.text-dark

@@ -192,7 +192,7 @@ app.get('/', manageAuth, (req, res) => {
         config,
         machine_dispense: Object.entries(history.machines_dispense).map(e => {
             const date = moment(new Date(e[1][e[1].length - 1].time))
-            const pretty_date = date.format("DD/MM HH:mm:ss")
+            const pretty_date = date.format("MM/DD HH:mm:ss")
             const today = e[1].filter(e => e.time >= (Date.now().valueOf() - 24 * 60 * 60000))
             let today_made = 0;
             today.filter(e => !e.free_play).map(e => {
